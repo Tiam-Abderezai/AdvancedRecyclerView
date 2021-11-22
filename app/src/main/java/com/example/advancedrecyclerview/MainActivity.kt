@@ -4,17 +4,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.advancedrecyclerview.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding : ActivityMainBinding
     private  var countryList = mutableListOf<String>()
     private  var displayList = mutableListOf<String>()
+    private lateinit var deletedCountry: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -69,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         itemTouchHelper.attachToRecyclerView(binding.recyclerview)
     }
 
-    private var simpleCallback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP.or(ItemTouchHelper.DOWN),0){
+    private var simpleCallback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP.or(ItemTouchHelper.DOWN),ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)){
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -84,7 +87,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-
+            var position = viewHolder.adapterPosition
+            when(direction){
+                ItemTouchHelper.LEFT -> {
+                    deletedCountry = displayList[position]
+                    displayList.removeAt(position)
+                    binding.recyclerview.adapter?.notifyItemRemoved(position)
+                    Snackbar.make(binding.recyclerview, "$deletedCountry is deleted", Snackbar.LENGTH_LONG).setAction("Undo", View.OnClickListener {
+                        displayList.add(position, deletedCountry)
+                        binding.recyclerview.adapter?.notifyItemInserted(position)
+                    }).show()
+                }
+            }
         }
     }
 
