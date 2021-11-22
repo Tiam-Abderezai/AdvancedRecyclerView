@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.advancedrecyclerview.databinding.ActivityMainBinding
@@ -63,6 +64,28 @@ class MainActivity : AppCompatActivity() {
 
 
         displayList.addAll(countryList)
+
+        val itemTouchHelper = ItemTouchHelper(simpleCallback)
+        itemTouchHelper.attachToRecyclerView(binding.recyclerview)
+    }
+
+    private var simpleCallback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP.or(ItemTouchHelper.DOWN),0){
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            var startPosition = viewHolder.layoutPosition
+            var endPosition = target.layoutPosition
+
+        Collections.swap(displayList, startPosition, endPosition)
+            binding.recyclerview.adapter?.notifyItemMoved(startPosition,endPosition)
+            return true
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
