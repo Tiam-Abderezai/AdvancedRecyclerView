@@ -7,4 +7,4 @@ RecyclerView used to display countries. Features inclue:
 
 Credit: [CodeWithMazn](https://www.youtube.com/watch?v=xYmH61Ilglc&list=PL65Ccv9j4eZI5xMPqIjABKniid-5X-BgS&index=1)
 
-![Alt text](https://github.com/Tiam-Abderezai/Images/blob/main/advanced-recycler-view1.gif)
+![Alt text](https://github.com/Tiam-Abderezai/Images/blob/main/Advanced-Recycler-View.gif)
