@@ -12,23 +12,36 @@ import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.advancedrecyclerview.ItemAdapter
+import com.example.advancedrecyclerview.R
 import com.example.advancedrecyclerview.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
-    lateinit var binding : ActivityMainBinding
-    private  var countryList = mutableListOf<String>()
-    private  var displayList = mutableListOf<String>()
+    lateinit var binding: ActivityMainBinding
+    private var countryList = mutableListOf<String>()
+    private var displayList = mutableListOf<String>()
     private lateinit var deletedCountry: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.apply {
-            recyclerview.apply {
+            recyclerView.apply {
                 layoutManager = LinearLayoutManager(context)
                 adapter = ItemAdapter(displayList)
+            }
+            swipeRefresh.apply {
+                setOnRefreshListener {
+                    displayList.apply {
+                        clear()
+                        addAll(countryList)
+                        recyclerView.adapter?.notifyDataSetChanged()
+                    }
+                    isRefreshing = false
+                }
             }
         }
         countryList.add("United States of America")
@@ -72,10 +85,15 @@ class MainActivity : AppCompatActivity() {
         displayList.addAll(countryList)
 
         val itemTouchHelper = ItemTouchHelper(simpleCallback)
-        itemTouchHelper.attachToRecyclerView(binding.recyclerview)
+        itemTouchHelper.attachToRecyclerView(binding.recyclerView)
+
+
     }
 
-    private var simpleCallback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP.or(ItemTouchHelper.DOWN),ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)){
+    private var simpleCallback = object : ItemTouchHelper.SimpleCallback(
+        ItemTouchHelper.UP.or(ItemTouchHelper.DOWN),
+        ItemTouchHelper.LEFT.or(ItemTouchHelper.RIGHT)
+    ) {
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
@@ -84,49 +102,57 @@ class MainActivity : AppCompatActivity() {
             val startPosition = viewHolder.layoutPosition
             val endPosition = target.layoutPosition
 
-        Collections.swap(displayList, startPosition, endPosition)
-            binding.recyclerview.adapter?.notifyItemMoved(startPosition,endPosition)
+            Collections.swap(displayList, startPosition, endPosition)
+            binding.recyclerView.adapter?.notifyItemMoved(startPosition, endPosition)
             return true
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             val position = viewHolder.adapterPosition
-            when(direction){
+            when (direction) {
                 ItemTouchHelper.LEFT -> {
                     deletedCountry = displayList[position]
                     displayList.removeAt(position)
-                    binding.recyclerview.adapter?.notifyItemRemoved(position)
-                    Snackbar.make(binding.recyclerview, "$deletedCountry is deleted", Snackbar.LENGTH_LONG).setAction("Undo", View.OnClickListener {
+                    binding.recyclerView.adapter?.notifyItemRemoved(position)
+                    Snackbar.make(
+                        binding.recyclerView,
+                        "$deletedCountry is deleted",
+                        Snackbar.LENGTH_LONG
+                    ).setAction("Undo", View.OnClickListener {
                         displayList.add(position, deletedCountry)
-                        binding.recyclerview.adapter?.notifyItemInserted(position)
+                        binding.recyclerView.adapter?.notifyItemInserted(position)
                     }).show()
                 }
 
-            ItemTouchHelper.RIGHT -> {
-                val editText = EditText(this@MainActivity)
-                editText.setText(displayList[position])
-                val builder = AlertDialog.Builder(this@MainActivity)
-                builder.apply {
-                    setTitle("Update an Item")
-                    setCancelable(true)
-                    setView(editText)
-                    setNeutralButton("cancel", DialogInterface.OnClickListener { dialog, which ->
-                        displayList.apply {
-                            clear()
-                            addAll(countryList)
-                            binding.recyclerview.adapter?.notifyDataSetChanged()
-                        }
-                    })
-                    setPositiveButton("update", DialogInterface.OnClickListener { dialog, which ->
-                        displayList.apply {
-                            set(position, editText.getText().toString())
-                            binding.recyclerview.adapter?.notifyItemChanged(position)
-                        }
-                    })
-                    builder.show()
-                }
+                ItemTouchHelper.RIGHT -> {
+                    val editText = EditText(this@MainActivity)
+                    editText.setText(displayList[position])
+                    val builder = AlertDialog.Builder(this@MainActivity)
+                    builder.apply {
+                        setTitle("Update an Item")
+                        setCancelable(true)
+                        setView(editText)
+                        setNeutralButton(
+                            "cancel",
+                            DialogInterface.OnClickListener { dialog, which ->
+                                displayList.apply {
+                                    clear()
+                                    addAll(countryList)
+                                    binding.recyclerView.adapter?.notifyDataSetChanged()
+                                }
+                            })
+                        setPositiveButton(
+                            "update",
+                            DialogInterface.OnClickListener { dialog, which ->
+                                displayList.apply {
+                                    set(position, editText.getText().toString())
+                                    binding.recyclerView.adapter?.notifyItemChanged(position)
+                                }
+                            })
+                        builder.show()
+                    }
 
-            }
+                }
             }
         }
     }
@@ -136,26 +162,26 @@ class MainActivity : AppCompatActivity() {
 
         val item: MenuItem = menu!!.findItem(R.id.action_search)
 
-        if(item != null){
+        if (item != null) {
             val searchView = item.actionView as SearchView
-            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?) = true
 
                 override fun onQueryTextChange(newText: String?): Boolean {
-                    if(newText!!.isNotEmpty()){
+                    if (newText!!.isNotEmpty()) {
                         displayList.clear()
                         val search = newText.lowercase(Locale.getDefault())
-                        for(country in countryList){
-                            if(country.lowercase(Locale.getDefault()).contains(search)){
+                        for (country in countryList) {
+                            if (country.lowercase(Locale.getDefault()).contains(search)) {
                                 displayList.add(country)
                             }
-                            binding.recyclerview.adapter!!.notifyDataSetChanged()
+                            binding.recyclerView.adapter!!.notifyDataSetChanged()
                         }
                     } else {
                         displayList.apply {
                             clear()
                             addAll(countryList)
-                            binding.recyclerview.adapter!!.notifyDataSetChanged()
+                            binding.recyclerView.adapter!!.notifyDataSetChanged()
                         }
                     }
                     return true
