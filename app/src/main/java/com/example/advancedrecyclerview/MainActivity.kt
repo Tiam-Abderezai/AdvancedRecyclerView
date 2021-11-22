@@ -1,10 +1,13 @@
 package com.example.advancedrecyclerview
 
+import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -78,8 +81,8 @@ class MainActivity : AppCompatActivity() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            var startPosition = viewHolder.layoutPosition
-            var endPosition = target.layoutPosition
+            val startPosition = viewHolder.layoutPosition
+            val endPosition = target.layoutPosition
 
         Collections.swap(displayList, startPosition, endPosition)
             binding.recyclerview.adapter?.notifyItemMoved(startPosition,endPosition)
@@ -87,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            var position = viewHolder.adapterPosition
+            val position = viewHolder.adapterPosition
             when(direction){
                 ItemTouchHelper.LEFT -> {
                     deletedCountry = displayList[position]
@@ -98,6 +101,32 @@ class MainActivity : AppCompatActivity() {
                         binding.recyclerview.adapter?.notifyItemInserted(position)
                     }).show()
                 }
+
+            ItemTouchHelper.RIGHT -> {
+                val editText = EditText(this@MainActivity)
+                editText.setText(displayList[position])
+                val builder = AlertDialog.Builder(this@MainActivity)
+                builder.apply {
+                    setTitle("Update an Item")
+                    setCancelable(true)
+                    setView(editText)
+                    setNeutralButton("cancel", DialogInterface.OnClickListener { dialog, which ->
+                        displayList.apply {
+                            clear()
+                            addAll(countryList)
+                            binding.recyclerview.adapter?.notifyDataSetChanged()
+                        }
+                    })
+                    setPositiveButton("update", DialogInterface.OnClickListener { dialog, which ->
+                        displayList.apply {
+                            set(position, editText.getText().toString())
+                            binding.recyclerview.adapter?.notifyItemChanged(position)
+                        }
+                    })
+                    builder.show()
+                }
+
+            }
             }
         }
     }
@@ -105,17 +134,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
 
-        var item: MenuItem = menu!!.findItem(R.id.action_search)
+        val item: MenuItem = menu!!.findItem(R.id.action_search)
 
         if(item != null){
-            var searchView = item.actionView as SearchView
+            val searchView = item.actionView as SearchView
             searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
                 override fun onQueryTextSubmit(query: String?) = true
 
                 override fun onQueryTextChange(newText: String?): Boolean {
                     if(newText!!.isNotEmpty()){
                         displayList.clear()
-                        var search = newText.lowercase(Locale.getDefault())
+                        val search = newText.lowercase(Locale.getDefault())
                         for(country in countryList){
                             if(country.lowercase(Locale.getDefault()).contains(search)){
                                 displayList.add(country)
